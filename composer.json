@@ -1,0 +1,22 @@
+{
+    "name": "kbaas/exestat",
+    "description": "Get performance statistics for Laravel requests",
+    "autoload": {
+        "psr-4": {
+            "Kbaas\\Exestat\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "kbaas"
+        }
+    ],
+    "require": {},
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Kbaas\\Exestat\\ExestatServiceProvider"
+            ]
+        }
+    }
+}
