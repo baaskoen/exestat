@@ -4,6 +4,7 @@ namespace Kbaas\Exestat;
 
 use Exception;
 use Illuminate\Support\Facades\Cache;
+use Kbaas\Exestat\Enums\ExestatSort;
 
 class Exestat
 {
@@ -18,44 +19,14 @@ class Exestat
     }
 
     /**
-     * @return void
-     */
-    public static function init(): void
-    {
-        if (static::$instance) {
-            return;
-        }
-
-        static::$instance = new Exestat();
-    }
-
-    /**
      * @param string $title
      * @param string|null $description
      * @return void
      * @throws Exception
      */
-    public static function start(string $title, ?string $description = null): void
+    public static function record(string $title, ?string $description = null): void
     {
         static::getInstance()->request->addEvent(new ExestatEvent($title, $description));
-    }
-
-    /**
-     * @return void
-     * @throws Exception
-     */
-    public static function end(): void
-    {
-        static::getInstance()->request->addEvent(new ExestatEvent('ExeStat ended'));
-        static::getInstance()->request->end();
-    }
-
-    /**
-     * @return bool
-     */
-    public static function hasEnded(): bool
-    {
-        return static::getInstance()->request->hasEnded();
     }
 
     /**
@@ -71,6 +42,57 @@ class Exestat
     }
 
     /**
+     * @return void
+     */
+    public static function init(): void
+    {
+        if (static::$instance) {
+            return;
+        }
+
+        static::$instance = new Exestat();
+    }
+
+    /**
+     * @return void
+     * @throws Exception
+     */
+    public static function stopRecording(): void
+    {
+        static::getInstance()->request->addEvent(new ExestatEvent('ExeStat ended'));
+        static::getInstance()->request->end();
+    }
+
+    /**
+     * @return bool
+     */
+    public static function hasEnded(): bool
+    {
+        return static::getInstance()->request->hasEnded();
+    }
+
+    /**
+     * @param ExestatSort|null $sort
+     * @return array
+     */
+    public static function getCache(ExestatSort $sort = null): array
+    {
+        $results = Cache::get(static::getCacheKey(), []);
+
+        if ($sort === ExestatSort::LATEST) {
+            return array_reverse($results);
+        }
+
+        if ($sort === ExestatSort::DURATION) {
+            usort($results, function (ExestatCachedResult $a, ExestatCachedResult $b) use ($sort) {
+                return $a->getTotalTimeElapsed() > $b->getTotalTimeElapsed() ? -1 : 1;
+            });
+        }
+
+        return $results;
+    }
+
+    /**
      * @return string
      */
     public static function getCacheKey(): string
@@ -79,10 +101,10 @@ class Exestat
     }
 
     /**
-     * @return array
+     * @return void
      */
-    public static function getCache(): array
+    public static function clearCache(): void
     {
-        return Cache::get(static::getCacheKey(), []);
+        Cache::forget(static::getCacheKey());
     }
 }

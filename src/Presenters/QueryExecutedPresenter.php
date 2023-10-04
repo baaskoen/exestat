@@ -16,6 +16,6 @@ class QueryExecutedPresenter extends ExestatPresenter
         /** @var QueryExecuted $event */
         $event = $args[0];
 
-        return "Query ({$event->time}): [$event->sql]";
+        return "Query ({$event->time} ms): [$event->sql]";
     }
 }
