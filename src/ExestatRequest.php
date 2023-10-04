@@ -50,7 +50,8 @@ class ExestatRequest
 
         $this->totalTimeElapsed = ($this->timeEnded - $this->timeStarted);
 
-        if (in_array(IgnoreExestat::class, Route::getCurrentRoute()->middleware())) {
+        $currentRoute = Route::getCurrentRoute();
+        if ($currentRoute && in_array(IgnoreExestat::class, $currentRoute->middleware())) {
             return;
         }
 
@@ -64,7 +65,15 @@ class ExestatRequest
     {
         $key = Exestat::getCacheKey();
 
-        $currentValue = Cache::get($key, []);
+        $limit = config('exestat.cache_limit', 200);
+
+        $currentValue = Exestat::getCache();
+        $count = count($currentValue);
+
+        if ($count >= $limit) {
+            $diffInCount = $count - $limit;
+            $currentValue = array_slice($currentValue, $diffInCount + 1);
+        }
 
         Cache::put($key, array_merge($currentValue, [
             new ExestatCachedResult($this->totalTimeElapsed, $this->events)

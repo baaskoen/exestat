@@ -4,7 +4,6 @@ namespace Kbaas\Exestat;
 
 use Illuminate\Foundation\Http\Events\RequestHandled;
 use Illuminate\Support\Facades\Event;
-use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Kbaas\Exestat\Presenters\ExestatPresenter;
 
@@ -15,13 +14,14 @@ class ExestatServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->mergeConfigFrom(__DIR__ . './../config/exestat.php', 'exestat');
-        $this->loadViewsFrom(__DIR__ . './../views', 'exestat');
-        $this->loadRoutesFrom(__DIR__ . './../routes/routes.php');
+        $this->mergeConfigFrom(__DIR__ . '/../config/exestat.php', 'exestat');
+        $this->loadViewsFrom(__DIR__ . '/../views', 'exestat');
+        $this->loadRoutesFrom(__DIR__ . '/../routes/routes.php');
 
-        Exestat::init();
-
-        $this->listenForEvents();
+        if (!$this->app->runningInConsole() && !request()->isMethod('OPTIONS')) {
+            Exestat::init();
+            $this->listenForEvents();
+        }
     }
 
     /**
@@ -29,28 +29,33 @@ class ExestatServiceProvider extends ServiceProvider
      */
     private function listenForEvents(): void
     {
-        $presenters = config('exestat.presenters');
+        $eventPresenters = config('exestat.event_presenters');
+        $captureEvents = config('exestat.capture_events');
 
-        Event::listen('*', function(string $name, array $args) use ($presenters) {
+        Event::listen('*', function (string $name, array $args) use ($eventPresenters, $captureEvents) {
 
             if (Exestat::hasEnded()) {
                 return;
             }
 
             if ($name === RequestHandled::class) {
-                Exestat::end();
+                Exestat::stopRecording();
+                return;
+            }
+
+            if (!$captureEvents) {
                 return;
             }
 
             $description = null;
 
             /** @var ExestatPresenter $presenter */
-            if (($presenterClass = ($presenters[$name] ?? null))) {
+            if (($presenterClass = ($eventPresenters[$name] ?? null))) {
                 $presenter = app($presenterClass);
                 $description = $presenter->toDescription($args);
             }
 
-            Exestat::start($name, $description);
+            Exestat::record($name, $description);
         });
     }
 }
