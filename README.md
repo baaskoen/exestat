@@ -1,6 +1,6 @@
-# ExeStat
+# Laravel ExeStat
 
-ExeStat provides a simple way to analyze the performance of your application:
+ExeStat provides a simple way to analyze the performance of your Laravel application:
 
 - See how long your requests take.
 - See a timeline of your requests and find out which parts of the code are slow.
