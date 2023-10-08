@@ -1,6 +1,7 @@
 {
     "name": "kbaas/exestat",
-    "description": "Get performance statistics for Laravel requests",
+    "description": "Analyze performance for Laravel requests",
+    "license": "MIT",
     "autoload": {
         "psr-4": {
             "Kbaas\\Exestat\\": "src/"
