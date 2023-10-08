@@ -1,70 +1,92 @@
-@php use Kbaas\Exestat\ExestatCachedResult; @endphp
-@php use Kbaas\Exestat\ExestatEvent; @endphp
+@php
+    use Kbaas\Exestat\ExestatCachedResult;use Kbaas\Exestat\ExestatEvent;use Kbaas\Exestat\ExestatQuery;
+@endphp
 @php /** @var ExestatCachedResult $result */ @endphp
+@php $duplicatedQueries = $result->getDuplicatedQueries(); @endphp
 @extends('exestat::layout')
 
 @section('content')
-    <div class="my-lg flex items-center justify-between">
+    <div class="my-lg flex gutter-md items-center justify-between">
+        @include('exestat::partials.request-title', ['result' => $result])
 
         <div class="flex gutter-md items-center">
-            <a href="javascript:history.back()">
-                <button>← Go back</button>
-            </a>
-
-            <strong>{{ $result->getRequestPath() }}</strong>
-            <strong>{{ $result->totalTimeElapsedInMilliseconds() }} ms</strong>
-            <small>{{ $result->getDateTime()->diffForHumans() }}</small>
+            <small>{{ $result->getTotalMemoryUsedInMbs() }}mb memory</small>
+            <small>{{ $result->getDateTime()->format('H:i:s') }} 🕒</small>
+            <small class="font-bold">{{ count($result->getQueries()) }} queries</small>
         </div>
     </div>
 
-    <div class="block">
-        <table>
+    <div class="w-8 centered">
+        @if(count($duplicatedQueries) > 0)
+            <div class="block shadow mb-lg">
+                <table class="full-width">
+                    <thead>
+                    <tr>
+                        <th class="text-left">Duplicated query</th>
+                        <th class="text-center">Calls</th>
+                        <th class="text-left">Total time</th>
+                    </tr>
+                    </thead>
+
+                    <tbody>
+                    @foreach($duplicatedQueries as $query)
+                        <tr>
+                            <td>
+                                <small>{{ $query['sql'] }}</small>
+                            </td>
+                            <td class="text-center">{{ $query['calls'] }}</td>
+                            <td>
+                                <div class="chip duration">{{ $query['time'] }} ms</div>
+                            </td>
+                        </tr>
+                    @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @endif
+
+        <div class="block shadow">
             @php /** @var ExestatEvent $event */ @endphp
             @foreach(array_reverse($result->getEvents()) as $key => $event)
-                    <?php $time = $event->totalTimeElapsedInMilliseconds() ?>
-
+                    <?php $time = $event->getTotalTimeElapsedInMilliseconds() ?>
                 @if(!$loop->first)
-                    <tr>
-                        <td class="text-center">
+                    <div
+                        class="border-bottom" style="border-left: 5px solid {{ $event->getColorCode() }};">
+                        <div
+                            class="flex gutter-md py-sm items-center justify-center px-md"
+                            style="color: {{ $event->getColorCode() }};"
+                        >
+                            <div class="chip duration">{{ $time }} ms</div>
                             <div
-                                style="border-left: 5px solid {{ $event->getColorCode() }}; color: {{ $event->getColorCode() }}; padding: {{ $event->getPadding($result) }}px;">
-                                <strong>
-                                    <span>Execution time: {{ $time }} ms.</span>
-                                    <span>Percentage: {{ $event->getPercentage($result) }}%</span>
-                                </strong>
-                            </div>
-                        </td>
-                    </tr>
-                @endif
-                <tr>
-                    <td>
-                        <div class="flex justify-between items-center">
-                            <span class="text-primary"><strong>→ {{ $event->getTitle() }}</strong></span>
-                            @if($event->getDescription())
-                                <button id="button-{{ $key }}" onclick="showDetails('{{ $key }}')">Show details</button>
-                            @endif
+                                class="arrow">@include('exestat::partials.arrow', ['color' => $event->getColorCode(), 'size' => 12 ])</div>
+                            <div class="chip duration">{{ $event->getPercentage($result) }} %</div>
                         </div>
-                    </td>
-                </tr>
-                <tr style="display: none;" id="details-{{ $key }}">
-                    <td class="pa-md">
-                        {{ $event->getDescription() }}
-                    </td>
-                </tr>
-            @endforeach
-        </table>
+                    </div>
+                @endif
 
+                <div class="pa-sm relative border-bottom">
+
+                    <div class="flex items-center gutter-md justify-center font-bold">
+                        @if($event->isEvent())
+                            <small>{{ $event->getTitle() }}</small>
+                        @else
+                            <small class="text-primary">{{ $event->getTitle() }}</small>
+                        @endif
+                    </div>
+                    @if($event->getDescription())
+                        <div class="text-center grey-1 mx-md pa-sm mt-sm rounded">
+                            <small>{{ $event->getDescription() }}</small>
+                        </div>
+                    @endif
+                </div>
+            @endforeach
+        </div>
     </div>
+
 @endsection
 
 @section('scripts')
     <script>
-        function showDetails(key) {
-            document.getElementById(`details-${key}`).style.display = '';
-
-            hideElementById(`button-${key}`)
-        }
-
         function hideElementById(id) {
             document.getElementById(id).style.display = 'none';
         }

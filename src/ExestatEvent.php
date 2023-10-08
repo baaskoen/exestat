@@ -4,25 +4,47 @@ namespace Kbaas\Exestat;
 
 class ExestatEvent
 {
+    /**
+     * @var string
+     */
     private string $title;
 
+    /**
+     * @var string|null
+     */
     private ?string $description;
 
+    /**
+     * @var float
+     */
     private float $timeStarted;
 
+    /**
+     * @var float|null
+     */
     private ?float $timeEnded = null;
 
+    /**
+     * @var float|null
+     */
     private ?float $totalTimeElapsed = null;
+
+    /**
+     * @var bool
+     */
+    private bool $isEvent;
 
     /**
      * @param string $title
      * @param string|null $description
+     * @param bool $isEvent
      */
-    public function __construct(string $title, ?string $description = null)
+    public function __construct(string $title, ?string $description = null, bool $isEvent = false)
     {
         $this->title = $title;
         $this->timeStarted = microtime(true);
         $this->description = $description;
+        $this->isEvent = $isEvent;
     }
 
     /**
@@ -71,19 +93,23 @@ class ExestatEvent
      */
     public function getColorCode(): string
     {
+        // Green
         if ($this->isGreen()) {
             return '#5ab78c';
         }
 
-        if ($this->totalTimeElapsedInMilliseconds() >= 1 && $this->totalTimeElapsedInMilliseconds() < 5) {
+        // Orange
+        if ($this->getTotalTimeElapsedInMilliseconds() >= 1 && $this->getTotalTimeElapsedInMilliseconds() < 5) {
             return '#d99c45';
         }
 
-        if ($this->totalTimeElapsedInMilliseconds() >= 5 && $this->totalTimeElapsedInMilliseconds() < 10) {
-            return '#d88181';
+        // Orange - Red
+        if ($this->getTotalTimeElapsedInMilliseconds() >= 5 && $this->getTotalTimeElapsedInMilliseconds() < 10) {
+            return '#f76f44';
         }
 
-        return '#de4c60';
+        // Red
+        return '#ff0000';
     }
 
     /**
@@ -91,26 +117,16 @@ class ExestatEvent
      */
     public function isGreen(): bool
     {
-        return $this->totalTimeElapsedInMilliseconds() < 1;
+        return $this->getTotalTimeElapsedInMilliseconds() < 1;
     }
 
     /**
+     * @param int $precision
      * @return float
      */
-    public function totalTimeElapsedInMilliseconds(): float
+    public function getTotalTimeElapsedInMilliseconds(int $precision = 2): float
     {
-        return round(($this->timeEnded - $this->timeStarted) * 1000, 2);
-    }
-
-    /**
-     * @param ExestatCachedResult $result
-     * @return float
-     */
-    public function getPadding(ExestatCachedResult $result): float
-    {
-        $percentage = $this->getPercentage($result);
-
-        return max(5, (int)($percentage * 1.5));
+        return round(($this->timeEnded - $this->timeStarted) * 1000, $precision);
     }
 
     /**
@@ -120,5 +136,13 @@ class ExestatEvent
     public function getPercentage(ExestatCachedResult $result): float
     {
         return round(($this->totalTimeElapsed / $result->getTotalTimeElapsed()) * 100, 2);
+    }
+
+    /**
+     * @return bool
+     */
+    public function isEvent(): bool
+    {
+        return $this->isEvent;
     }
 }

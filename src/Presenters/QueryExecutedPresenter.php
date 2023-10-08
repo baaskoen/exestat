@@ -6,7 +6,6 @@ use Illuminate\Database\Events\QueryExecuted;
 
 class QueryExecutedPresenter extends ExestatPresenter
 {
-
     /**
      * @param array $args
      * @return string
@@ -15,7 +14,6 @@ class QueryExecutedPresenter extends ExestatPresenter
     {
         /** @var QueryExecuted $event */
         $event = $args[0];
-
-        return "Query ({$event->time} ms): [$event->sql]";
+        return vsprintf(str_replace('?', "'%s'", $event->sql), $event->bindings);
     }
 }

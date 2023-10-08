@@ -14,6 +14,19 @@ use Psr\Container\NotFoundExceptionInterface;
 class ExestatController extends Controller
 {
     /**
+     * @var Exestat
+     */
+    private Exestat $exestat;
+
+    /**
+     * @param Exestat $exestat
+     */
+    public function __construct(Exestat $exestat)
+    {
+        $this->exestat = $exestat;
+    }
+
+    /**
      * @return View
      * @throws ContainerExceptionInterface
      * @throws NotFoundExceptionInterface
@@ -21,7 +34,7 @@ class ExestatController extends Controller
     public function index(): View
     {
         $sort = request()->has('sort') ? ExestatSort::from(request()->get('sort')) : ExestatSort::LATEST;
-        $results = Exestat::getCache($sort);
+        $results = $this->exestat->getCache($sort);
 
         return view('exestat::pages.index', [
             'results' => $results,
@@ -38,7 +51,7 @@ class ExestatController extends Controller
         $result = null;
 
         /** @var ExestatCachedResult $cache */
-        foreach (Exestat::getCache() as $cache) {
+        foreach ($this->exestat->getCache(ExestatSort::LATEST) as $cache) {
             if ($cache->getUuid() === $uuid) {
                 $result = $cache;
                 break;
@@ -59,7 +72,7 @@ class ExestatController extends Controller
      */
     public function clear(): RedirectResponse
     {
-        Exestat::clearCache();
+        $this->exestat->clearCache();
 
         return redirect()->route('exestat.index');
     }
