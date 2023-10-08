@@ -14,7 +14,9 @@
             "name": "kbaas"
         }
     ],
-    "require": {},
+    "require": {
+        "php": ">=8.1"
+    },
     "extra": {
         "laravel": {
             "providers": [
