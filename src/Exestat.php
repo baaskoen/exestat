@@ -3,81 +3,60 @@
 namespace Kbaas\Exestat;
 
 use Exception;
+use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Support\Facades\Cache;
 use Kbaas\Exestat\Enums\ExestatSort;
 
 class Exestat
 {
-    private static ?Exestat $instance = null;
-
+    /**
+     * @var ExestatRequest
+     */
     private ExestatRequest $request;
 
     public function __construct()
     {
-        $this->request = new ExestatRequest();
-        $this->request->addEvent(new ExestatEvent('ExeStat initialized'));
+        $this->request = new ExestatRequest($this);
+        $this->request->addEvent(new ExestatEvent('Request started'));
     }
 
     /**
      * @param string $title
      * @param string|null $description
-     * @return void
-     * @throws Exception
-     */
-    public static function record(string $title, ?string $description = null): void
-    {
-        static::getInstance()->request->addEvent(new ExestatEvent($title, $description));
-    }
-
-    /**
-     * @return Exestat
-     */
-    private static function getInstance(): Exestat
-    {
-        if (!static::$instance) {
-            static::init();
-        }
-
-        return static::$instance;
-    }
-
-    /**
+     * @param bool $isEvent
      * @return void
      */
-    public static function init(): void
+    public function record(string $title, ?string $description = null, bool $isEvent = false): void
     {
-        if (static::$instance) {
-            return;
-        }
-
-        static::$instance = new Exestat();
+        $this->request->addEvent(new ExestatEvent($title, $description, $isEvent));
     }
+
 
     /**
      * @return void
      * @throws Exception
      */
-    public static function stopRecording(): void
+    public function stopRecording(): void
     {
-        static::getInstance()->request->addEvent(new ExestatEvent('ExeStat ended'));
-        static::getInstance()->request->end();
+        $this->request->addEvent(new ExestatEvent('Request handled'));
+        $this->request->end();
     }
 
     /**
      * @return bool
      */
-    public static function hasEnded(): bool
+    public function hasEnded(): bool
     {
-        return static::getInstance()->request->hasEnded();
+        return $this->request->hasEnded();
     }
 
     /**
      * @param ExestatSort|null $sort
      * @return array
      */
-    public static function getCache(ExestatSort $sort = null): array
+    public function getCache(ExestatSort $sort = null): array
     {
-        $results = Cache::get(static::getCacheKey(), []);
+        $results = Cache::get($this->getCacheKey(), []);
 
         if ($sort === ExestatSort::LATEST) {
             return array_reverse($results);
@@ -95,16 +74,29 @@ class Exestat
     /**
      * @return string
      */
-    public static function getCacheKey(): string
+    public function getCacheKey(): string
     {
-        return 'exestat_requests';
+        return config('exestat.cache_key');
+    }
+
+    /**
+     * @param QueryExecuted $event
+     * @return void
+     */
+    public function addQueryFromEvent(QueryExecuted $event): void
+    {
+        $this->request->addQuery(new ExestatQuery(
+            $event->sql,
+            $event->bindings,
+            $event->time
+        ));
     }
 
     /**
      * @return void
      */
-    public static function clearCache(): void
+    public function clearCache(): void
     {
-        Cache::forget(static::getCacheKey());
+        Cache::forget($this->getCacheKey());
     }
 }

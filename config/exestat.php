@@ -12,7 +12,7 @@ return [
     /**
      * Whether to capture all fired events
      */
-    'capture_events' => false,
+    'capture_events' => true,
 
     /**
      * Customize the description for these events
@@ -20,4 +20,10 @@ return [
     'event_presenters' => [
         QueryExecuted::class => QueryExecutedPresenter::class
     ],
+
+    /**
+     * The key used to cache request information
+     * Shouldn't need to edit this
+     */
+    'cache_key' => 'exestat_requests'
 ];

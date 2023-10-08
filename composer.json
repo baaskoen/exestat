@@ -4,7 +4,10 @@
     "autoload": {
         "psr-4": {
             "Kbaas\\Exestat\\": "src/"
-        }
+        },
+        "files": [
+            "./helpers/helpers.php"
+        ]
     },
     "authors": [
         {

@@ -8,19 +8,54 @@ use Kbaas\Exestat\Http\Middleware\IgnoreExestat;
 
 class ExestatRequest
 {
+    /**
+     * @var Exestat
+     */
+    private Exestat $exestat;
+
+    /**
+     * @var array
+     */
     private array $events;
 
+    /**
+     * @var array
+     */
+    private array $queries;
+
+    /**
+     * @var ExestatEvent|null
+     */
     private ?ExestatEvent $lastEvent = null;
 
+    /**
+     * @var float
+     */
     private float $timeStarted;
 
+    /**
+     * @var float|null
+     */
     private ?float $timeEnded = null;
 
+    /**
+     * @var float|null
+     */
     private ?float $totalTimeElapsed = null;
 
-    public function __construct()
+    /**
+     * @var int|null
+     */
+    private ?int $totalMemoryUsed = null;
+
+    /**
+     * @param Exestat $exestat
+     */
+    public function __construct(Exestat $exestat)
     {
+        $this->exestat = $exestat;
         $this->events = [];
+        $this->queries = [];
         $this->timeStarted = microtime(true);
     }
 
@@ -45,6 +80,7 @@ class ExestatRequest
      */
     public function end(): void
     {
+        $this->totalMemoryUsed = memory_get_peak_usage(true);
         $this->timeEnded = microtime(true);
         $this->lastEvent->end();
 
@@ -63,11 +99,9 @@ class ExestatRequest
      */
     private function cacheResults(): void
     {
-        $key = Exestat::getCacheKey();
-
         $limit = config('exestat.cache_limit', 200);
 
-        $currentValue = Exestat::getCache();
+        $currentValue = $this->exestat->getCache();
         $count = count($currentValue);
 
         if ($count >= $limit) {
@@ -75,9 +109,18 @@ class ExestatRequest
             $currentValue = array_slice($currentValue, $diffInCount + 1);
         }
 
-        Cache::put($key, array_merge($currentValue, [
-            new ExestatCachedResult($this->totalTimeElapsed, $this->events)
+        Cache::put($this->exestat->getCacheKey(), array_merge($currentValue, [
+            new ExestatCachedResult($this->totalTimeElapsed, $this->events, $this->queries, $this->totalMemoryUsed)
         ]));
+    }
+
+    /**
+     * @param ExestatQuery $query
+     * @return void
+     */
+    public function addQuery(ExestatQuery $query): void
+    {
+        $this->queries[] = $query;
     }
 
     /**
@@ -94,5 +137,13 @@ class ExestatRequest
     public function getLastEvent(): ExestatEvent
     {
         return $this->lastEvent;
+    }
+
+    /**
+     * @return int|null
+     */
+    public function getTotalMemoryUsed(): ?int
+    {
+        return $this->totalMemoryUsed;
     }
 }

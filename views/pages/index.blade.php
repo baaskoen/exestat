@@ -3,37 +3,54 @@
 @extends('exestat::layout')
 
 @section('content')
-    <div class="my-lg flex gutter-md items-center gutter-md">
-        @if($currentSort === ExestatSort::LATEST)
-            <a href="{{ route('exestat.index', ['sort' => 'duration']) }}">
-                <button>Sort by duration</button>
-            </a>
-        @endif
+    @php $count = count($results);  @endphp
+    @if($count > 0)
+        <div class="my-lg flex gutter-md items-center gutter-md">
+            <div>
+                <strong>
+                    Showing
+                    @if($currentSort === ExestatSort::LATEST)
+                        latest
+                    @else
+                        longest
+                    @endif
+                    request ({{ $count }})
+                </strong>
+            </div>
 
-        @if($currentSort === ExestatSort::DURATION)
-            <a href="{{ route('exestat.index', ['sort' => 'latest']) }}">
-                <button>Sort by latest</button>
-            </a>
-        @endif
-    </div>
-    <div class="block">
+            <div>
+                @if($currentSort === ExestatSort::DURATION)
+                    <a href="{{ route('exestat.index', ['sort' => 'latest']) }}">
+                        <button>Sort by latest</button>
+                    </a>
+                @endif
+
+                @if($currentSort === ExestatSort::LATEST)
+                    <a href="{{ route('exestat.index', ['sort' => 'duration']) }}">
+                        <button>Sort by duration</button>
+                    </a>
+                @endif
+            </div>
+        </div>
+    @endif
+    <div class="block pa-md shadow">
         @php /** @var ExestatCachedResult $result */ @endphp
         @forelse($results as $result)
-            <div class="flex justify-between border-bottom items-center pa-md">
-                <div>
-                    <span>{{ $result->getRequestMethod() }}: {{ $result->getRequestPath() }}</span>
-                    <div>Duration: <strong>{{ $result->totalTimeElapsedInMilliseconds() }} ms</strong></div>
-                    <div><small>{{ $result->getDateTime()->diffForHumans() }}</small></div>
-                </div>
+            <a
+                href="{{ route('exestat.detail', $result->getUuid()) }}"
+                class="result flex justify-between items-center pa-sm border-bottom"
+            >
+                @include('exestat::partials.request-title', ['result' => $result])
 
-                <a href="{{ route('exestat.detail', $result->getUuid()) }}">
-                    <button>
-                        Show details
-                    </button>
-                </a>
-            </div>
+                <div>
+                    <small>{{ $result->getDateTime()->diffForHumans() }} 🕒</small>
+                </div>
+            </a>
         @empty
-            <span>No requests found!</span>
+            <div>
+                <strong>🔎 No requests found.</strong>
+                <div>Click around in your app and refresh this page! 🍀</div>
+            </div>
         @endforelse
     </div>
 @endsection
