@@ -7,7 +7,7 @@ return [
     /**
      * Maximum amount of requests to cache
      */
-    'cache_limit' => 200,
+    'cache_limit' => 50,
 
     /**
      * Whether to capture all fired events
