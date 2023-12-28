@@ -57,8 +57,7 @@
                             style="color: {{ $event->getColorCode() }};"
                         >
                             <div class="chip duration">{{ $time }} ms</div>
-                            <div
-                                class="arrow">@include('exestat::partials.arrow', ['color' => $event->getColorCode(), 'size' => 12 ])</div>
+                            <div class="arrow">→</div>
                             <div class="chip duration">{{ $event->getPercentage($result) }} %</div>
                         </div>
                     </div>
