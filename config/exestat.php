@@ -1,6 +1,10 @@
 <?php
 
+use Illuminate\Auth\Access\Events\GateEvaluated;
+use Illuminate\Cache\Events\CacheHit;
 use Illuminate\Database\Events\QueryExecuted;
+use Kbaas\Exestat\Presenters\CacheHitPresenter;
+use Kbaas\Exestat\Presenters\GateEvaluatedPresenter;
 use Kbaas\Exestat\Presenters\QueryExecutedPresenter;
 
 return [
@@ -18,7 +22,9 @@ return [
      * Customize the description for these events
      */
     'event_presenters' => [
-        QueryExecuted::class => QueryExecutedPresenter::class
+        QueryExecuted::class => QueryExecutedPresenter::class,
+        GateEvaluated::class => GateEvaluatedPresenter::class,
+        CacheHit::class => CacheHitPresenter::class
     ],
 
     /**

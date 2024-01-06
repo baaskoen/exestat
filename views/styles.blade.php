@@ -23,10 +23,6 @@
         margin: auto;
     }
 
-    .w-8 {
-        width: 760px;
-    }
-
     .w-3 {
         width: 285px;
     }
@@ -112,6 +108,10 @@
         overflow: hidden;
     }
 
+    .overflow-auto {
+        overflow: auto;
+    }
+
     .justify-between {
         justify-content: space-between;
     }
@@ -128,6 +128,10 @@
         justify-content: end;
     }
 
+    .gutter-sm {
+        gap: 0.5rem;
+    }
+
     .gutter-md {
         gap: 1rem;
     }
@@ -140,8 +144,8 @@
         width: 100%;
     }
 
-    .w-8 {
-        width: 760px;
+    .full-height {
+        height: 100%;
     }
 
     .text-left {
@@ -170,6 +174,10 @@
         position: absolute;
         top: 0;
         right: 0;
+    }
+
+    .top--10 {
+        top: -10px;
     }
 
     button {
@@ -247,5 +255,24 @@
         font-size: 11pt;
         border: thin solid var(--color-grey-1);
         padding: 0.5rem;
+    }
+
+    dialog {
+        border-radius: 5px;
+        background-color: white;
+        border: none;
+        z-index: 100;
+        box-shadow: 0 2px 3px var(--color-grey-3);
+    }
+
+    .warning {
+        background-color: red;
+        color: white;
+        border-radius: 5px;
+        padding: 0.25rem;
+    }
+
+    .z-10 {
+        z-index: 10;
     }
 </style>

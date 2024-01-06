@@ -4,6 +4,7 @@ namespace Kbaas\Exestat\Http\Controllers;
 
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Kbaas\Exestat\Enums\ExestatSort;
 use Kbaas\Exestat\Exestat;
@@ -43,10 +44,11 @@ class ExestatController extends Controller
     }
 
     /**
+     * @param Request $request
      * @param string $uuid
      * @return View
      */
-    public function detail(string $uuid): View
+    public function detail(Request $request, string $uuid): View
     {
         $result = null;
 
@@ -63,7 +65,8 @@ class ExestatController extends Controller
         }
 
         return view('exestat::pages.detail', [
-            'result' => $result
+            'result' => $result,
+            'omitThreshold' => abs(floatval($request->query('omit_threshold', 0)))
         ]);
     }
 

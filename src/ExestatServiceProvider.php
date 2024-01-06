@@ -52,13 +52,11 @@ class ExestatServiceProvider extends ServiceProvider
      */
     private function listenForEvents(Exestat $exestat): void
     {
-
-        $eventPresenters = config('exestat.event_presenters');
         $captureEvents = config('exestat.capture_events');
 
-        Event::listen('*',
-            function (string $name, array $args)
-            use ($exestat, $eventPresenters, $captureEvents) {
+        Event::listen(
+            '*',
+            function (string $name, array $args) use ($exestat, $captureEvents) {
 
                 if ($exestat->hasEnded()) {
                     return;
@@ -73,19 +71,39 @@ class ExestatServiceProvider extends ServiceProvider
                     $exestat->addQueryFromEvent($args[0]);
                 }
 
-                if (!$captureEvents) {
-                    return;
+                if ($captureEvents) {
+                    $this->handleEvents($exestat, $name, $args);
                 }
+            }
+        );
+    }
 
-                $description = null;
+    /**
+     * @param Exestat $exestat
+     * @param string $name
+     * @param array $args
+     * @return void
+     */
+    protected function handleEvents(Exestat $exestat, string $name, array $args): void
+    {
+        $eventPresenters = config('exestat.event_presenters');
+        $description = $args['description'] ?? null;
 
-                /** @var ExestatPresenter $presenter */
-                if (($presenterClass = ($eventPresenters[$name] ?? null))) {
-                    $presenter = app($presenterClass);
-                    $description = $presenter->toDescription($args);
-                }
+        /**
+         * Try to get description from event if it exists
+         */
+        if ($eventObject = $args[0]) {
+            if (property_exists($eventObject, 'description')) {
+                $description = $eventObject->description;
+            }
+        }
 
-                $exestat->record($name, $description, true);
-            });
+        /** @var ExestatPresenter $presenter */
+        if (($presenterClass = ($eventPresenters[$name] ?? null))) {
+            $presenter = app($presenterClass);
+            $description = $presenter->toDescription($args);
+        }
+
+        $exestat->record($name, $description, true);
     }
 }
