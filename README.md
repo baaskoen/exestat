@@ -51,5 +51,6 @@ By default, all events will be captured and shown in the timeline. You can disab
 
 There are already excellent tools available like Telescope, Debugbar, Clockwork and many more.
 
-However, I just wanted a very lightweight and simple tool that can easily be accessed by just going to `/exestat` without requiring additional setup.
+However, I just wanted a very lightweight and simple tool that can easily be accessed by just going to `/exestat`
+without requiring additional setup.
 It aims to **not** slow down your requests (by caching one array per request).

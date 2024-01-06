@@ -1,5 +1,5 @@
 @php
-    use Kbaas\Exestat\ExestatCachedResult;use Kbaas\Exestat\ExestatEvent;use Kbaas\Exestat\ExestatQuery;
+    use Kbaas\Exestat\ExestatCachedResult;
 @endphp
 @php /** @var ExestatCachedResult $result */ @endphp
 @php $duplicatedQueries = $result->getDuplicatedQueries(); @endphp
@@ -16,7 +16,7 @@
         </div>
     </div>
 
-    <div class="w-8 centered">
+    <div class="centered">
         @if(count($duplicatedQueries) > 0)
             <div class="block shadow mb-lg">
                 <table class="full-width">
@@ -45,40 +45,21 @@
             </div>
         @endif
 
-        <div class="block shadow">
-            @php /** @var ExestatEvent $event */ @endphp
-            @foreach(array_reverse($result->getEvents()) as $key => $event)
-                    <?php $time = $event->getTotalTimeElapsedInMilliseconds() ?>
-                @if(!$loop->first)
-                    <div
-                        class="border-bottom" style="border-left: 5px solid {{ $event->getColorCode() }};">
-                        <div
-                            class="flex gutter-md py-sm items-center justify-center px-md"
-                            style="color: {{ $event->getColorCode() }};"
-                        >
-                            <div class="chip duration">{{ $time }} ms</div>
-                            <div class="arrow">→</div>
-                            <div class="chip duration">{{ $event->getPercentage($result) }} %</div>
-                        </div>
-                    </div>
-                @endif
-
-                <div class="pa-sm relative border-bottom">
-
-                    <div class="flex items-center gutter-md justify-center font-bold">
-                        @if($event->isEvent())
-                            <small>{{ $event->getTitle() }}</small>
-                        @else
-                            <small class="text-primary">{{ $event->getTitle() }}</small>
-                        @endif
-                    </div>
-                    @if($event->getDescription())
-                        <div class="text-center grey-1 mx-md pa-sm mt-sm rounded">
-                            <small>{{ $event->getDescription() }}</small>
-                        </div>
-                    @endif
+        <div class="block shadow mb-lg">
+            <!-- Timeline overview -->
+            <div class="flex items-center gutter justify-between pa-md border-bottom">
+                <span class="font-bold">Overview of request events from start to end</span>
+                <!-- Input for omitting transitions -->
+                <div>
+                    <label for="omit_threshold"><small>Omit transitions shorter than</small></label>
+                    <input style="width: 50px;" step="any" type="number"
+                           onchange="onOmitThresholdChange(event)"
+                           id="omit_threshold" name="omit_threshold" value="{{ $omitThreshold }}"/>
+                    <small>ms</small>
                 </div>
-            @endforeach
+
+            </div>
+            @include('exestat::partials.events', ['events' => $result->getEvents(), 'omitThreshold' => $omitThreshold])
         </div>
     </div>
 
@@ -86,8 +67,55 @@
 
 @section('scripts')
     <script>
-        function hideElementById(id) {
-            document.getElementById(id).style.display = 'none';
+        /**
+         * Handle tooltips (dialog) in simple way
+         */
+        document.addEventListener('DOMContentLoaded', function () {
+            const tooltips = document.getElementsByClassName('tooltip');
+
+            for (let i = 0; i < tooltips.length; i++) {
+                const tooltip = tooltips[i];
+
+                const firstChild = tooltip.querySelector('span');
+                const dialogChild = tooltip.querySelector('dialog');
+
+                if (firstChild && dialogChild) {
+                    firstChild.style.cursor = 'pointer';
+                    firstChild.style['text-decoration'] = 'underline';
+
+                    firstChild.onclick = () => {
+                        closeAllTooltips();
+
+                        dialogChild.toggleAttribute('open');
+                    }
+                }
+            }
+        });
+
+        /**
+         * Close all tooltips
+         */
+        function closeAllTooltips() {
+            const dialogs = document.getElementsByTagName('dialog');
+            for (let i = 0; i < dialogs.length; i++) {
+                dialogs[i].removeAttribute('open');
+            }
+        }
+
+        /**
+         * @param event
+         */
+        function onOmitThresholdChange(event) {
+            const currentUrl = window.location.href;
+
+            const regex = /[?&]omit_threshold=[^&]*/;
+
+            if (regex.test(currentUrl)) {
+                window.location.href = currentUrl.replace(window.location, `?omit_threshold=${event.target.value}`);
+            } else {
+                const separator = currentUrl.includes('?') ? '&' : '?';
+                window.location.href = `${currentUrl}${separator}omit_threshold=${event.target.value}`;
+            }
         }
     </script>
 @endsection
