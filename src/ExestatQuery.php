@@ -68,6 +68,6 @@ class ExestatQuery
      */
     public function getFullQuery(): string
     {
-        return vsprintf(str_replace('?', "'%s'", $this->sql), $this->bindings);
+        return query_to_string($this->sql, $this->bindings);
     }
 }

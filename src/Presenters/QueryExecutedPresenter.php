@@ -14,6 +14,7 @@ class QueryExecutedPresenter extends ExestatPresenter
     {
         /** @var QueryExecuted $event */
         $event = $args[0];
-        return vsprintf(str_replace('?', "'%s'", $event->sql), $event->bindings);
+
+        return query_to_string($event->sql, $event->bindings);
     }
 }
