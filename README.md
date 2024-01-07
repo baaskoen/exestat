@@ -7,6 +7,8 @@ ExeStat provides a simple way to analyze the performance of your Laravel applica
 - See how many queries are done and which ones are duplicated.
 - Allows you to add custom "breakpoints" to your timeline.
 
+![Request detail](./img/detail.png)
+
 ## Installation
 
 Run the following artisan command:
